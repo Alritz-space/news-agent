@@ -2,7 +2,7 @@ name: Daily News Agent
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # Runs every day at 7:00 UTC
+    - cron: '0 4 * * *'  # Runs every day at 4:00 UTC
   workflow_dispatch:      # Allows manual run
 
 jobs:
