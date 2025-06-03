@@ -1,0 +1,12 @@
+{
+	"Microsoft Dynamics 365": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"SAP Business One": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"Intuit Enterprise Suite": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"Acumatica": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"Salesforce": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"AvidXchange": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"Chargebee": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"Shopify": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"],
+	"Aptean": ["release", "update", "launch", "acquisition", "feature", "quarterly earnings"]
+
+}
