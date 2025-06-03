@@ -4,7 +4,7 @@ import smtplib
 import hashlib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import requests
 
 DATA_FILE = 'seen_articles.json'
@@ -53,14 +53,13 @@ def is_source_allowed(source):
         return False
     return True
 
-def article_date_newer_than_today(pub_date_str):
-    # SerpAPI dates are typically like "2023-06-01T12:00:00Z"
+def article_within_last_24_hours(pub_date_str):
     try:
         pub_date = datetime.strptime(pub_date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
-        return pub_date.date() == now.date()
+        return now - pub_date <= timedelta(hours=24)
     except Exception:
-        # If date parsing fails, keep the article to be safe
+        # If parsing fails, include the article to be safe
         return True
 
 def filter_articles_by_keywords(articles, keywords):
@@ -105,7 +104,7 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         if not is_source_allowed(source.lower()):
             continue  # skip sources not allowed
 
-        if pub_date and not article_date_newer_than_today(pub_date):
+        if pub_date and not article_within_last_24_hours(pub_date):
             continue  # skip older than today
 
         articles.append({
