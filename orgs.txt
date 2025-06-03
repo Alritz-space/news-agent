@@ -8,3 +8,17 @@ Chargebee
 Shopify
 Aptean
 NetSuite
+Sage Intacct
+Odoo
+QuickBooks
+Infor cloudsuite
+Epicor
+Microsoft Dynamics NAV
+Sage X3
+Syspro
+Xero
+Workday
+Zoho Books
+Brightpearl
+Certinia
+FinancialForce
