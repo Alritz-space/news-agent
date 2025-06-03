@@ -21,6 +21,7 @@ def save_stored_hashes(data):
         json.dump(data, f, indent=2)
 
 def news_hash(item):
+    # Defensive handling of missing fields
     title = item.get('title') or ''
     link = item.get('link') or ''
     unique_str = title + link
@@ -55,7 +56,7 @@ def fetch_news_serpapi(query, api_key):
         title = item.get("title")
         link = item.get("link")
         if not title or not link:
-            continue  # skip incomplete articles
+            continue  # Skip incomplete articles
         articles.append({
             "title": title,
             "link": link,
@@ -108,6 +109,9 @@ def main():
         articles = fetch_news_serpapi(org, serpapi_key)
         fresh_articles = []
         for art in articles:
+            if not art.get("title") or not art.get("link"):
+                print("Skipping article due to missing title or link:", art)
+                continue
             h = news_hash(art)
             if stored_hashes.get(h):
                 continue
