@@ -1,4 +1,9 @@
-OpenAI
-Google
-Microsoft
-Meta
+Microsoft Dynamics 365
+SAP Business One
+Intuit's Enterprise Suite
+Acumatica
+Salesforce
+AvidXchange
+Chargebee
+Shopify
+Aptean
