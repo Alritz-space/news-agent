@@ -45,14 +45,6 @@ def load_filters():
     with open(FILTERS_FILE, 'r') as f:
         return json.load(f)
 
-def is_source_allowed(source):
-    # Simple check if source is in whitelist and not in blacklist
-    if any(bad in source for bad in blacklist_sources):
-        return False
-    if whitelist_sources and not any(good in source for good in whitelist_sources):
-        return False
-    return True
-
 def article_within_last_24_hours(pub_date_str):
     try:
         pub_date = datetime.strptime(pub_date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
@@ -95,14 +87,10 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         title = item.get("title")
         link = item.get("link")
         snippet = item.get("snippet") or ''
-        source = item.get("source") or ''
         pub_date = item.get("date") or item.get("date_time") or ''
 
         if not title or not link:
             continue  # skip incomplete
-
-        if not is_source_allowed(source.lower()):
-            continue  # skip sources not allowed
 
         if pub_date and not article_within_last_24_hours(pub_date):
             continue  # skip older than today
