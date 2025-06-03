@@ -21,7 +21,9 @@ def save_stored_hashes(data):
         json.dump(data, f, indent=2)
 
 def news_hash(item):
-    unique_str = item['title'] + item['link']
+    title = item.get('title') or ''
+    link = item.get('link') or ''
+    unique_str = title + link
     return hashlib.sha256(unique_str.encode()).hexdigest()
 
 def load_organizations():
@@ -50,9 +52,13 @@ def fetch_news_serpapi(query, api_key):
     news_results = data.get("news_results", [])
     articles = []
     for item in news_results:
+        title = item.get("title")
+        link = item.get("link")
+        if not title or not link:
+            continue  # skip incomplete articles
         articles.append({
-            "title": item.get("title"),
-            "link": item.get("link"),
+            "title": title,
+            "link": link,
             "pub_date": item.get("date")
         })
     return articles
