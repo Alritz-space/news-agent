@@ -69,8 +69,10 @@ def filter_articles_by_keywords(articles, keywords):
             filtered.append(art)
     return filtered
 
-def fetch_news_serpapi(query, api_key, keywords=None):
+def fetch_news_serpapi(org, api_key, keywords=None):
     url = "https://serpapi.com/search.json"
+    query = f"{org} ({' OR '.join(keywords)})" if keywords else org
+
     params = {
         "engine": "google_news",
         "q": query,
@@ -78,17 +80,19 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         "hl": "en",
         "gl": "us",
         "sort_by": "date",
-        "num": 10
+        "tbs": "qdr:d",     # Last 24 hours
+        "num": 100,
+        "no_cache": True    # Forces fresh results (optional, remove if rate limits are a concern)
     }
+
     response = requests.get(url, params=params)
     if response.status_code != 200:
-        print(f"Failed to fetch news for {query}: {response.text}")
+        print(f"Failed to fetch news for {org}: {response.text}")
         return []
 
     data = response.json()
     news_results = data.get("news_results", [])
     articles = []
-
     for item in news_results:
         title = item.get("title")
         link = item.get("link")
@@ -96,10 +100,8 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         pub_date = item.get("date")
         source = item.get("source", "")
 
-        if not title or not link or not pub_date:
-            continue
-
-        if not article_within_last_24_hours(pub_date):
+        # Best-effort parse of date (SerpAPI formats can vary)
+        if pub_date and not article_within_last_24_hours(pub_date):
             continue
 
         article = {
@@ -111,7 +113,6 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         }
         articles.append(article)
 
-    articles = filter_articles_by_keywords(articles, keywords)
     return articles[:5]
 
 def summarize_article(article):
