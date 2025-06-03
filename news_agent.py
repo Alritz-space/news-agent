@@ -21,7 +21,6 @@ def save_stored_hashes(data):
         json.dump(data, f, indent=2)
 
 def news_hash(item):
-    # Defensive handling of missing fields
     title = item.get('title') or ''
     link = item.get('link') or ''
     unique_str = title + link
