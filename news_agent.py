@@ -42,13 +42,21 @@ def load_filters():
         return json.load(f)
 
 def article_within_last_24_hours(pub_date_str):
-    try:
-        pub_date = datetime.strptime(pub_date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        return now - pub_date <= timedelta(hours=24)
-    except Exception as e:
-        print(f"Could not parse publication date: {pub_date_str} ({e})")
-        return False
+    formats = [
+        "%Y-%m-%dT%H:%M:%SZ",              # ISO format
+        "%m/%d/%Y, %I:%M %p, +0000 UTC",   # e.g., 02/04/2025, 08:00 AM, +0000 UTC
+        "%b %d, %Y",                       # e.g., Apr 30, 2025
+        "%B %d, %Y"                        # e.g., April 30, 2025
+    ]
+    for fmt in formats:
+        try:
+            pub_date = datetime.strptime(pub_date_str, fmt).replace(tzinfo=timezone.utc)
+            now = datetime.now(timezone.utc)
+            return now - pub_date <= timedelta(hours=24)
+        except ValueError:
+            continue
+    print(f"Could not parse publication date: {pub_date_str}")
+    return False
 
 def filter_articles_by_keywords(articles, keywords):
     if not keywords:
