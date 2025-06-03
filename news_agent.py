@@ -83,25 +83,24 @@ def fetch_news_serpapi(query, api_key, keywords=None):
     data = response.json()
     news_results = data.get("news_results", [])
     articles = []
-    for item in news_results:
-        title = item.get("title")
-        link = item.get("link")
-        snippet = item.get("snippet") or ''
-        pub_date = item.get("date") or item.get("date_time") or ''
+    for item in results:
+    title = item.get("title")
+    link = item.get("link")
+    snippet = item.get("snippet", "")
+    pub_date = item.get("date")
+    source = item.get("source", "")  # ✅ FIX HERE
 
-        if not title or not link:
-            continue  # skip incomplete
+    if pub_date and not article_within_last_24_hours(pub_date):
+        continue
 
-        if pub_date and not article_within_last_24_hours(pub_date):
-            continue  # skip older than today
-
-        articles.append({
-            "title": title,
-            "link": link,
-            "snippet": snippet,
-            "source": source,
-            "pub_date": pub_date
-        })
+    article = {
+        "title": title,
+        "link": link,
+        "snippet": snippet,
+        "published": pub_date,
+        "source": source
+    }
+    articles.append(article)
 
     # Filter by context keywords
     articles = filter_articles_by_keywords(articles, keywords)
