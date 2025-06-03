@@ -9,11 +9,7 @@ import requests
 
 DATA_FILE = 'seen_articles.json'
 ORG_FILE = 'orgs.txt'
-FILTERS_FILE = 'filters.json'  # JSON mapping org -> list of keywords
-
-# Example source whitelist and blacklist - tweak as needed
-whitelist_sources = ['reuters.com', 'bbc.co.uk', 'techcrunch.com']
-blacklist_sources = ['example.com', 'spamnews.com']
+FILTERS_FILE = 'filters.json'
 
 def load_stored_hashes():
     if os.path.exists(DATA_FILE):
@@ -50,9 +46,9 @@ def article_within_last_24_hours(pub_date_str):
         pub_date = datetime.strptime(pub_date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
         return now - pub_date <= timedelta(hours=24)
-    except Exception:
-        # If parsing fails, include the article to be safe
-        return True
+    except Exception as e:
+        print(f"Could not parse publication date: {pub_date_str} ({e})")
+        return False
 
 def filter_articles_by_keywords(articles, keywords):
     if not keywords:
@@ -64,15 +60,6 @@ def filter_articles_by_keywords(articles, keywords):
         if any(kw in content for kw in keywords_lower):
             filtered.append(art)
     return filtered
-
-def filter_by_source(articles, whitelist, blacklist):
-    def allowed(source):
-        if whitelist and not any(src in (source or "") for src in whitelist):
-            return False
-        if blacklist and any(src in (source or "") for src in blacklist):
-            return False
-        return True
-    return [a for a in articles if allowed(a.get("source", ""))]
 
 def fetch_news_serpapi(query, api_key, keywords=None):
     url = "https://serpapi.com/search.json"
@@ -89,9 +76,11 @@ def fetch_news_serpapi(query, api_key, keywords=None):
     if response.status_code != 200:
         print(f"Failed to fetch news for {query}: {response.text}")
         return []
+
     data = response.json()
     news_results = data.get("news_results", [])
     articles = []
+
     for item in news_results:
         title = item.get("title")
         link = item.get("link")
@@ -99,7 +88,10 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         pub_date = item.get("date")
         source = item.get("source", "")
 
-        if pub_date and not article_within_last_24_hours(pub_date):
+        if not title or not link or not pub_date:
+            continue
+
+        if not article_within_last_24_hours(pub_date):
             continue
 
         article = {
@@ -111,15 +103,10 @@ def fetch_news_serpapi(query, api_key, keywords=None):
         }
         articles.append(article)
 
-    # Filter by context keywords
     articles = filter_articles_by_keywords(articles, keywords)
-    # Filter by source whitelist/blacklist
-    articles = filter_by_source(articles, whitelist_sources, blacklist_sources)
-    # Limit to 5 articles max
     return articles[:5]
 
 def summarize_article(article):
-    # Very simple summary: just return title + first 120 chars of snippet
     snippet = article.get('snippet', '')
     summary = snippet[:120] + ('...' if len(snippet) > 120 else '')
     return f"{article.get('title', 'No Title')} - {summary}"
@@ -175,8 +162,6 @@ def main():
         articles = fetch_news_serpapi(org, serpapi_key, keywords)
         fresh_articles = []
         for art in articles:
-            if not art.get("title") or not art.get("link"):
-                continue
             h = news_hash(art)
             if stored_hashes.get(h):
                 continue
