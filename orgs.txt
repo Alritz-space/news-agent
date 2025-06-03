@@ -1,9 +1,10 @@
-Microsoft-Dynamics-365
-SAP-Business-One
-Intuit-Enterprise-Suite
+Microsoft Dynamics 365
+SAP Business One
+Intuit Enterprise Suite
 Acumatica
 Salesforce
 AvidXchange
 Chargebee
 Shopify
 Aptean
+none
