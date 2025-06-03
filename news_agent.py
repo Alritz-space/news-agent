@@ -65,6 +65,15 @@ def filter_articles_by_keywords(articles, keywords):
             filtered.append(art)
     return filtered
 
+def filter_by_source(articles, whitelist, blacklist):
+    def allowed(source):
+        if whitelist and not any(src in (source or "") for src in whitelist):
+            return False
+        if blacklist and any(src in (source or "") for src in blacklist):
+            return False
+        return True
+    return [a for a in articles if allowed(a.get("source", ""))]
+
 def fetch_news_serpapi(query, api_key, keywords=None):
     url = "https://serpapi.com/search.json"
     params = {
@@ -83,28 +92,29 @@ def fetch_news_serpapi(query, api_key, keywords=None):
     data = response.json()
     news_results = data.get("news_results", [])
     articles = []
-    for item in results:
-    title = item.get("title")
-    link = item.get("link")
-    snippet = item.get("snippet", "")
-    pub_date = item.get("date")
-    source = item.get("source", "")  # ✅ FIX HERE
+    for item in news_results:
+        title = item.get("title")
+        link = item.get("link")
+        snippet = item.get("snippet", "")
+        pub_date = item.get("date")
+        source = item.get("source", "")
 
-    if pub_date and not article_within_last_24_hours(pub_date):
-        continue
+        if pub_date and not article_within_last_24_hours(pub_date):
+            continue
 
-    article = {
-        "title": title,
-        "link": link,
-        "snippet": snippet,
-        "published": pub_date,
-        "source": source
-    }
-    articles.append(article)
+        article = {
+            "title": title,
+            "link": link,
+            "snippet": snippet,
+            "pub_date": pub_date,
+            "source": source
+        }
+        articles.append(article)
 
     # Filter by context keywords
     articles = filter_articles_by_keywords(articles, keywords)
-
+    # Filter by source whitelist/blacklist
+    articles = filter_by_source(articles, whitelist_sources, blacklist_sources)
     # Limit to 5 articles max
     return articles[:5]
 
@@ -112,7 +122,7 @@ def summarize_article(article):
     # Very simple summary: just return title + first 120 chars of snippet
     snippet = article.get('snippet', '')
     summary = snippet[:120] + ('...' if len(snippet) > 120 else '')
-    return f"{article['title']} - {summary}"
+    return f"{article.get('title', 'No Title')} - {summary}"
 
 def compose_email(new_news):
     html = f"<h2>Daily News Summary - {datetime.utcnow().strftime('%Y-%m-%d')}</h2>"
@@ -120,7 +130,7 @@ def compose_email(new_news):
         html += f"<h3>{org}</h3><ul>"
         for art in articles:
             summary = summarize_article(art)
-            html += f"<li><a href='{art['link']}'>{summary}</a> ({art['pub_date']}) - <i>{art['source']}</i></li>"
+            html += f"<li><a href='{art.get('link','#')}'>{summary}</a> ({art.get('pub_date', 'N/A')}) - <i>{art.get('source', 'N/A')}</i></li>"
         html += "</ul>"
     return html
 
@@ -131,11 +141,14 @@ def send_email(subject, html_body, to_email, from_email, from_pass):
     msg['Subject'] = subject
     msg.attach(MIMEText(html_body, 'html'))
 
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(from_email, from_pass)
-    server.send_message(msg)
-    server.quit()
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(from_email, from_pass)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
 def main():
     org_list = load_organizations()
