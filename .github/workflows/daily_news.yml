@@ -23,8 +23,9 @@ jobs:
 
     - name: Run news agent
       env:
-        SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
         EMAIL_TO: ${{ secrets.EMAIL_TO }}
         EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
       run: python news_agent.py
