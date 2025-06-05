@@ -28,4 +28,5 @@ jobs:
         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         GOOGLE_CSE_ID: ${{ secrets.GOOGLE_CSE_ID }}
+        SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
       run: python news_agent.py
